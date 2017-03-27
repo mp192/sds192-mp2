@@ -1,12 +1,10 @@
 ---
 title: "Mini-Project 2"
-author: "Your Name Here"
-date: "March 24, 2017"
+author: "Misha Ritoch, Megan Pak"
+date: "March 27, 2017"
 output: html_document
 ---
 
-
-## Loading the data
 
 
 ```{r, include=FALSE}
@@ -14,4 +12,58 @@ load("house_elections.rda")
 load("candidates.rda")
 load("committees.rda")
 load("contributions.rda")
+```
+
+This joins the tables. ** when trying to compile, Line 22 had issues
+```{r, warning=FALSE, message=FALSE}
+library(dplyr) 
+library(tidyr) 
+candidates %>%
+  group_by(cand_state)
+contr_data <- contributions %>% inner_join(candidates, by = "cand_id")
+```
+
+This looks at all 50 states
+```{r, warning=FALSE, message=FALSE}
+party_money <- contr_data %>%
+  group_by(cand_state, cand_party_affiliation) %>%
+  summarize(
+    N=n(), total = sum(transaction_amt)) %>%
+  filter(cand_party_affiliation %in% c("REP", "DEM")) 
+```
+
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(ggthemes)
+ggplot(party_money, aes(x=cand_party_affiliation, y=total)) + 
+                 geom_bar(stat="identity", aes(color = cand_party_affiliation, fill=cand_party_affiliation)) +
+  facet_wrap(~cand_state, ncol = 10) + 
+scale_y_continuous(labels = scales::comma) +
+scale_fill_manual(values = c("DEM" = "#0000FF", "REP" = "#FF0000")) +
+scale_color_manual(values = c("DEM" = "#0000FF", "REP" = "#FF0000")) +
+  theme_few() +
+  xlab("Party ID") + 
+  ylab("Total Contribution ($)") + 
+  ggtitle("Figure 1. Total Contributions for all 50 States by Political Party")
+```
+
+
+This looks at only Massachusetts and Illinois
+```{r, warning=FALSE, message=FALSE}
+MAIL <- party_money %>% 
+  filter(cand_state %in% c("MA", "IL"))
+```
+
+```{r, warning=FALSE, message=FALSE}
+ggplot(MAIL, aes(x=cand_party_affiliation, y=total)) + 
+                 geom_bar(stat="identity", aes(color = cand_party_affiliation, fill=cand_party_affiliation)) +
+  facet_wrap(~cand_state, ncol = 2) + 
+  scale_y_continuous(labels = scales::comma) +
+  scale_fill_manual(values = c("DEM" = "#0000FF", "REP" = "#FF0000")) +
+  scale_color_manual(values = c("DEM" = "#0000FF", "REP" = "#FF0000")) +
+  theme_few() +
+  xlab("Party ID") + 
+  ylab("Total Contribution ($)") + 
+  ggtitle("Figure 2. Contributions for Political Parties in Massachusetts and Illinois")
 ```
